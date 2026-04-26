@@ -341,7 +341,17 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-Then **Settings → Pages → Source → GitHub Actions**.
+Enable Pages with the GitHub Actions source via `gh` (one-time per repo):
+
+```bash
+# First time — creates the Pages site
+gh api -X POST repos/{owner}/{repo}/pages -f build_type=workflow
+
+# If Pages was already enabled with a different source — switch it
+gh api -X PUT repos/{owner}/{repo}/pages -f build_type=workflow
+```
+
+`{owner}/{repo}` can be left as the literal `{owner}/{repo}` placeholder when run inside the repo — `gh` resolves it from the current remote. Otherwise substitute the full slug.
 
 ---
 
