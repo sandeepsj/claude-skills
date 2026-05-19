@@ -19,8 +19,18 @@ LOG="/tmp/vayu-build.log"
 cd "$REPO_ROOT"
 : > "$LOG"
 
-# Run the build and stream output to log while also capturing it
-pnpm build 2>&1 | tee "$LOG"
+# Run the build. Use `stdbuf -oL` so GHC's output stays line-buffered through
+# the pipe — without it, `tee` block-buffers and Claude (or the user) sees
+# nothing for minutes at a time on a slow build.
+#
+# Tip: for live progress in Claude Code, run this script via Bash with
+# `run_in_background: true` and stream "$LOG" with the Monitor tool
+# (`tail -n +1 -F /tmp/vayu-build.log`).
+if command -v stdbuf >/dev/null 2>&1; then
+  stdbuf -oL -eL pnpm build 2>&1 | stdbuf -oL tee "$LOG"
+else
+  pnpm build 2>&1 | tee "$LOG"
+fi
 BUILD_STATUS="${PIPESTATUS[0]}"
 
 # Parse GHC diagnostics out of the log.
